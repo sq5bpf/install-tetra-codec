@@ -13,15 +13,22 @@ Installation steps:
 * Check if you can sudo to root (and fix it if not), for example like this:
 
 $ sudo id
+
 [sudo] password for sq5bpf: 
+
 uid=0(root) gid=0(root) groups=0(root)
+
 
 * Download the script and run it:
 
 $ git clone https://github.com/sq5bpf/install-tetra-codec
+
 $ cd install-tetra-codec
+
 $ chmod 755 install.sh
+
 $ ./install.sh
+
 
 This should download and compile the codec. 
 It will be installed to /tetra/bin (sudo privileges are needed if /tetra 
