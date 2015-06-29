@@ -6,6 +6,7 @@
 # LICENSE for the license text, or if unavaliable obtain it via other means.
 #
 # Changelog:
+# 20150629: manage permissions better, and check installation --sq5bpf
 # 20150617: initial version --sq5bpf
 
 # please read this script, it is self-documenting
@@ -15,8 +16,9 @@ URL="http://www.etsi.org/deliver/etsi_en/300300_300399/30039502/01.03.01_60/en_3
 CODECFILE=`basename "$URL"`
 CODECSUM=a8115fe68ef8f8cc466f4192572a1e3e
 WORKDIR=/tmp/codec-$$
-INSTALLDIR=/tetra/bin
-SCRIPT_VERSION=1.0
+BASEDIR=/tetra #change this if you want to install in another directory
+INSTALLDIR=$BASEDIR/bin
+SCRIPT_VERSION=1.1
 
 check_codec() {
 	TMPSUM=`md5sum "$CODECFILE" 2>/dev/null |cut -d ' ' -f 1`
@@ -85,13 +87,14 @@ compile_codec() {
 install_codec() {
 	echo "******  Installing codec."
 	echo "Will try without sudo first, and then with sudo if that fails"
-	MYUSER=`whoami`
+	MYUSER=`id -nu`
+	MYGROUP=`id -ng`
 	( cd "$WORKDIR/c-code" || exit $?
 	#try without sudo first
 	mkdir -p "$INSTALLDIR" || sudo mkdir -p "$INSTALLDIR"
 	cp sdecoder scoder cdecoder ccoder "$INSTALLDIR" || \
 		sudo cp sdecoder scoder cdecoder ccoder "$INSTALLDIR"
-	chown -R $MYUSER "$INSTALLDIR" || sudo chown -R $MYUSER "$INSTALLDIR"
+	chown -R ${MYUSER}.${MYGROUP} "$BASEDIR" || sudo chown -R ${MYUSER}.${MYGROUP} "$BASEDIR"
 	) ; RET=$?
 	if [ "$RET" != 0 ]; then
 		echo "There was some problem installing, maybe you don't have sudo privileges?"
@@ -104,11 +107,20 @@ cleanup_install() {
 	rm -fr "$WORKDIR"
 }
 
-######### main
+check_install() {
+	for i in sdecoder scoder cdecoder ccoder
+	do
+		[ -x "${INSTALLDIR}/$i" ] || return 1
+	done
+	return 0
+}
 
+######### main
+echo "******  TETRA Codec installer [$0 v$SCRIPT_VERSION]"
+echo "******  (c) 2015 Jacek Lipkowski <sq5bpf@lipkowski.org>"
 check_prerequisites
 get_codec
 check_codec #you can comment out this line if you know what you're doing :)
 compile_codec
 install_codec && cleanup_install
-echo "******  Codec installed"
+check_install && echo "******  Codec installed [$0 v$SCRIPT_VERSION]"
