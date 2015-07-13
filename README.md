@@ -34,11 +34,28 @@ This should download and compile the codec.
 It will be installed to /tetra/bin (sudo privileges are needed if /tetra 
 is not writeable by the user).
 
-View the install.sh script to see how it works, change presets etc.
+View the install.sh script to see how it works, change presets etc. Please 
+read the script first so that you know what it does, it is unwise to execute
+random scripts downloaded from the internet without understanding them first.
 
 In case of errors email me with the errors, and with complete info about 
 the distribution (version, if it is 32 or 64-bit etc).
 
+
+
+Legal notice: 
+I disclaim any liability for things that this software does or doesn't do.
+Everything is the responsibility of the user.
+
+Also please note that this script downloads the TETRA codec from the ETSI 
+website, and install it for your own use. It is up to you to verify that this
+is legally correct in your jurisdiction. Some of the licensing text is 
+avaliable on the ETSI website. I am not a lawyer, and don't consider this 
+legal advice, but it would be probably inapropriate to include precompiled
+binaries or the source from ETSI in any product (or distribute it further in 
+any other way).
+ 
+
 Changelog: 
 20150622: initial version --sq5bpf
-
+20150713: minor README changes --sq5bpf

@@ -5,6 +5,9 @@
 # This script is licensed by the GNU General Public License v2. See the file
 # LICENSE for the license text, or if unavaliable obtain it via other means.
 #
+# I disclaim any liability for things that this software does or doesn't do.
+# Everything is the responsibility of the user.
+#
 # Changelog:
 # 20150629: manage permissions better, and check installation --sq5bpf
 # 20150617: initial version --sq5bpf
