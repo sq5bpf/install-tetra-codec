@@ -1,13 +1,17 @@
 Includes of the patches from osmocom-tetra, and also patches to log to stderr,
 enables compiler optimizations and allows building in a 64-bit gcc.
-				--sq5bpf
-				--Antonio Eugenio Burriel <aeburriel@gmail.com>
+                                --Jacek Lipkowski <sq5bpf@lipkowski.org>
+                                --Antonio Eugenio Burriel <aeburriel@gmail.com>
+
+Includes patch to pass the keystream in the usused fifth frame of the 
+TETRA hardware test frame format and apply it after channel decoding.
+This is sent by osmo-tetra-sq5bpf-2 
+                                --Jacek Lipkowski <sq5bpf@lipkowski.org>
 
 
-
-diff -ur orig/amr-code/channel.h new/amr-code/channel.h
---- orig/amr-code/channel.h	2003-01-09 13:33:48.000000000 +0100
-+++ new/amr-code/channel.h	2015-02-28 23:09:40.431796317 +0100
+diff -ur workdir_vanilla/amr-code/channel.h workdir_patched/amr-code/channel.h
+--- workdir_vanilla/amr-code/channel.h	2003-01-09 13:33:48.000000000 +0100
++++ workdir_patched/amr-code/channel.h	2026-01-02 10:01:55.018617454 +0100
 @@ -139,7 +139,7 @@
  Word16 negate(Word16 var1);               /* Short negate,        1 */
  Word16 norm_l(Word32 L_var1);             /* Long norm,          30 */
@@ -17,9 +21,9 @@ diff -ur orig/amr-code/channel.h new/amr-code/channel.h
  Word16 shl(Word16 var1, Word16 var2);     /* Short shift left,    1 */
  Word16 shr(Word16 var1, Word16 var2);     /* Short shift right,   1 */
  Word16 sub(Word16 var1, Word16 var2);     /* Short sub,           1 */
-diff -ur orig/amr-code/init_params.c new/amr-code/init_params.c
---- orig/amr-code/init_params.c	2003-01-09 13:30:52.000000000 +0100
-+++ new/amr-code/init_params.c	2015-02-28 23:09:40.435796388 +0100
+diff -ur workdir_vanilla/amr-code/init_params.c workdir_patched/amr-code/init_params.c
+--- workdir_vanilla/amr-code/init_params.c	2003-01-09 13:30:52.000000000 +0100
++++ workdir_patched/amr-code/init_params.c	2026-01-02 10:01:55.022617466 +0100
 @@ -26,11 +26,11 @@
  #include "const.tab" /* contains constants for channel coding/decoding */
  #include "arrays.h" /* contains constants for channel coding/decoding */
@@ -36,9 +40,9 @@ diff -ur orig/amr-code/init_params.c new/amr-code/init_params.c
  
  #define ALLOW_NEG(x) (((x) < 0) ? (((-x)%2 == 1) ?  (-x)/2 - N1_2 + 1 :  (x)/2 + 1) : (x))
  
-diff -ur orig/amr-code/makefile new/amr-code/makefile
---- orig/amr-code/makefile	2003-01-09 13:29:36.000000000 +0100
-+++ new/amr-code/makefile	2015-02-28 23:16:31.371084599 +0100
+diff -ur workdir_vanilla/amr-code/makefile workdir_patched/amr-code/makefile
+--- workdir_vanilla/amr-code/makefile	2003-01-09 13:29:36.000000000 +0100
++++ workdir_patched/amr-code/makefile	2026-01-02 10:01:55.022617466 +0100
 @@ -21,7 +21,7 @@
  
  CC=gcc
@@ -61,9 +65,9 @@ diff -ur orig/amr-code/makefile new/amr-code/makefile
  	$(CC) $(SRCS2) $(CFLAGS) -o cdecoder
  
  clean:
-diff -ur orig/amr-code/source.h new/amr-code/source.h
---- orig/amr-code/source.h	2002-11-18 15:54:26.000000000 +0100
-+++ new/amr-code/source.h	2015-02-28 23:27:09.550436888 +0100
+diff -ur workdir_vanilla/amr-code/source.h workdir_patched/amr-code/source.h
+--- workdir_vanilla/amr-code/source.h	2002-11-18 15:54:26.000000000 +0100
++++ workdir_patched/amr-code/source.h	2026-01-02 10:01:55.022617466 +0100
 @@ -19,11 +19,11 @@
  
  #ifndef TYPEDEF_H
@@ -89,9 +93,9 @@ diff -ur orig/amr-code/source.h new/amr-code/source.h
  Word16 shl(Word16 var1, Word16 var2);     /* Short shift left,    1 */
  Word16 shr(Word16 var1, Word16 var2);     /* Short shift right,   1 */
  Word16 sub(Word16 var1, Word16 var2);     /* Short sub,           1 */
-diff -ur orig/amr-code/tetra_op.c new/amr-code/tetra_op.c
---- orig/amr-code/tetra_op.c	2003-01-09 13:36:22.000000000 +0100
-+++ new/amr-code/tetra_op.c	2015-02-28 23:09:40.435796388 +0100
+diff -ur workdir_vanilla/amr-code/tetra_op.c workdir_patched/amr-code/tetra_op.c
+--- workdir_vanilla/amr-code/tetra_op.c	2003-01-09 13:36:22.000000000 +0100
++++ workdir_patched/amr-code/tetra_op.c	2026-01-02 10:01:55.022617466 +0100
 @@ -31,7 +31,7 @@
  *					- negate()
  *					- norm_l()
@@ -127,10 +131,35 @@ diff -ur orig/amr-code/tetra_op.c new/amr-code/tetra_op.c
    {
     Word16 var_out;
     Word32 L_arrondi;
-diff -ur orig/c-code/cdecoder.c new/c-code/cdecoder.c
---- orig/c-code/cdecoder.c	1995-06-06 11:32:14.000000000 +0200
-+++ new/c-code/cdecoder.c	2015-02-28 23:09:40.435796388 +0100
-@@ -67,23 +67,23 @@
+diff -ur workdir_vanilla/c-code/cdecoder.c workdir_patched/c-code/cdecoder.c
+--- workdir_vanilla/c-code/cdecoder.c	1995-06-06 11:32:14.000000000 +0200
++++ workdir_patched/c-code/cdecoder.c	2026-01-03 13:58:16.282890562 +0100
+@@ -4,6 +4,10 @@
+ *
+ *	DESCRIPTION		:	Main program for speech channel decoding
+ *
++*	NOTE: the original source has been patched to accept the keystream
++*	      in the unused fifth frame. this is sent by osmo-tetra-sq5bpf-2
++*	      Jacek Lipkowski <sq5bpf@lipkowski.org>
++*
+ ************************************************************************
+ *
+ *	USAGE			:	cdecoder input_file output_file
+@@ -36,6 +40,7 @@
+ 
+ /* LIBRARIES USED */
+ #include <stdlib.h>
++#include <string.h>
+ #include "channel.h"
+ 		       
+ #ifndef TRUE
+@@ -63,27 +68,29 @@
+ 	Word16  Reordered_array[286];   /* 2 frames vocoder + 8 + 4 */
+ 	Word16  Interleaved_coded_array[432]; /*time-slot length at 7.2 kb/s*/
+ 	Word16  Coded_array[432];
++
++	Word16 keystream_array[137*2]; /* array with the keystream, which has been hacked into the frame passed by osmo-tetra-sq5bpf */
+ 	
  	/* Parse arguments */
  	if ( argc != 3 )
  	{
@@ -161,16 +190,49 @@ diff -ur orig/c-code/cdecoder.c new/c-code/cdecoder.c
  		exit( 1 );
  	}
  
-@@ -93,7 +93,7 @@
+@@ -91,14 +98,30 @@
+ 	while( 1 )
+ 	{
  /* read Input_array (1 TETRA frame = 2 speech frames) from input file */
- 		if (Read_Tetra_File (fin, Interleaved_coded_array) == -1)
+-		if (Read_Tetra_File (fin, Interleaved_coded_array) == -1)
++		if (Read_Tetra_File (fin, Interleaved_coded_array, keystream_array) == -1)
  		  {
 -		  puts ("cdecoder: reached end of input_file");
 +		  fputs ("cdecoder: reached end of input_file",stderr);
  		  break;
  		  }
- 				 
-@@ -116,7 +116,7 @@
+-				 
+-
+ 
++		/* tmp debug keystream dump --sq5bpf */
++		if (0) {
++			char gg[4096];
++			sprintf(gg,"*** keystream:\n");
++			for (i=0;i<(137*2);i++) {
++				char f[32];
++
++				if (i%16==0) {
++					if (i) strcat(gg,"\n");
++					sprintf(f,"%3i 0x%3.3x:  ",i,i);
++					strcat(gg,f);
++				}
++				sprintf(f," %x",keystream_array[i]);
++				strcat(gg,f);
++			}
++			strcat(gg,"\n\n\n");
++			fprintf(stderr,"%s",gg); 
++		}
+ 
+ 	if (Frame_stealing) 
+ 	{
+@@ -110,13 +133,13 @@
+ 	}
+ 	else
+ 		Desinterleaving_Speech(Interleaved_coded_array, Coded_array);
+-		bfi1 = Frame_stealing;
++	bfi1 = Frame_stealing;
+ 
+ /* "Interleaved_coded_array" has been desinterleaved and result put
  in "Coded_array" */
  
  /* Message in case the Frame was stolen */
@@ -179,12 +241,19 @@ diff -ur orig/c-code/cdecoder.c new/c-code/cdecoder.c
  
  /* Channel Decoding */
  		bfi2 = Channel_Decoding(first_pass,Frame_stealing,
-@@ -126,35 +126,35 @@
+@@ -126,35 +149,42 @@
  /* Increment Loop counter */
  		Loop_counter++;
  /* Message in case the Bad Frame Indicator was set */
 -		if (bfi2) printf("Frame Nb %ld Bfi active\n\n",Loop_counter);
 +		if (bfi2) fprintf(stderr,"Frame Nb %ld Bfi active\n\n",Loop_counter);
++
++		/* apply keystream --sq5bpf */
++		for (i=0;i<(137*2);i++) {
++			Reordered_array[i]^=keystream_array[i];
++		}
++
++
  
  /* writing  Reordered_array to output file */
  			      /* bfi bit */
@@ -222,9 +291,18 @@ diff -ur orig/c-code/cdecoder.c new/c-code/cdecoder.c
  	
  	/* closing files */
  	fclose( fin );
-diff -ur orig/c-code/channel.h new/c-code/channel.h
---- orig/c-code/channel.h	1995-06-09 16:14:42.000000000 +0200
-+++ new/c-code/channel.h	2015-02-28 23:09:40.435796388 +0100
+diff -ur workdir_vanilla/c-code/channel.h workdir_patched/c-code/channel.h
+--- workdir_vanilla/c-code/channel.h	1995-06-09 16:14:42.000000000 +0200
++++ workdir_patched/c-code/channel.h	2026-01-02 10:24:17.385025443 +0100
+@@ -82,7 +82,7 @@
+ void		Init_Rcpc_Decoding(void);
+ void		Rcpc_Decoding(Word16 FS_Flag, Word16 Input_Frame[],
+ 			Word16 Output_Frame[]);
+-short		Read_Tetra_File (FILE *fin, short *array);
++short		Read_Tetra_File (FILE *fin, short *array, short *keystream_array);
+ Word16	Unbuild_Sensitivity_Classes(Word16 FS_Flag, Word16 Input_Frame[],
+ 			Word16 Output_Frame[]);
+ Word16	Untransform_Class_0(Word16 FS_Flag, Word16 Input_Frame[]);
 @@ -130,7 +130,7 @@
  Word16 negate(Word16 var1);               /* Short negate,        1 */
  Word16 norm_l(Word32 L_var1);             /* Long norm,          30 */
@@ -234,9 +312,9 @@ diff -ur orig/c-code/channel.h new/c-code/channel.h
  Word16 shl(Word16 var1, Word16 var2);     /* Short shift left,    1 */
  Word16 shr(Word16 var1, Word16 var2);     /* Short shift right,   1 */
  Word16 sub(Word16 var1, Word16 var2);     /* Short sub,           1 */
-diff -ur orig/c-code/makefile new/c-code/makefile
---- orig/c-code/makefile	1995-06-06 11:35:40.000000000 +0200
-+++ new/c-code/makefile	2015-02-28 23:12:08.158414239 +0100
+diff -ur workdir_vanilla/c-code/makefile workdir_patched/c-code/makefile
+--- workdir_vanilla/c-code/makefile	1995-06-06 11:35:40.000000000 +0200
++++ workdir_patched/c-code/makefile	2026-01-02 10:01:55.022617466 +0100
 @@ -21,9 +21,9 @@
  
  # macro definitions
@@ -273,10 +351,9 @@ diff -ur orig/c-code/makefile new/c-code/makefile
 -	rm -f core *.o
 +	rm -f core *.o cdecoder sdecoder ccoder scoder
  
-Sólo en new/c-code: makefile.orig
-diff -ur orig/c-code/sdecoder.c new/c-code/sdecoder.c
---- orig/c-code/sdecoder.c	1995-06-06 10:55:28.000000000 +0200
-+++ new/c-code/sdecoder.c	2015-02-28 23:09:40.435796388 +0100
+diff -ur workdir_vanilla/c-code/sdecoder.c workdir_patched/c-code/sdecoder.c
+--- workdir_vanilla/c-code/sdecoder.c	1995-06-06 10:55:28.000000000 +0200
++++ workdir_patched/c-code/sdecoder.c	2026-01-02 10:01:55.022617466 +0100
 @@ -58,15 +58,15 @@
  
    if ( argc != 3 )
@@ -327,9 +404,9 @@ diff -ur orig/c-code/sdecoder.c new/c-code/sdecoder.c
  
      Bits2prm_Tetra(serial, parm);	/* serial to parameters */
  
-diff -ur orig/c-code/source.h new/c-code/source.h
---- orig/c-code/source.h	1995-06-06 11:10:52.000000000 +0200
-+++ new/c-code/source.h	2015-02-28 23:27:09.550436888 +0100
+diff -ur workdir_vanilla/c-code/source.h workdir_patched/c-code/source.h
+--- workdir_vanilla/c-code/source.h	1995-06-06 11:10:52.000000000 +0200
++++ workdir_patched/c-code/source.h	2026-01-02 10:01:55.022617466 +0100
 @@ -19,11 +19,11 @@
  
  #ifndef TYPEDEF_H
@@ -355,9 +432,73 @@ diff -ur orig/c-code/source.h new/c-code/source.h
  Word16 shl(Word16 var1, Word16 var2);     /* Short shift left,    1 */
  Word16 shr(Word16 var1, Word16 var2);     /* Short shift right,   1 */
  Word16 sub(Word16 var1, Word16 var2);     /* Short sub,           1 */
-diff -ur orig/c-code/sub_dsp.c new/c-code/sub_dsp.c
---- orig/c-code/sub_dsp.c	1996-03-19 11:25:12.000000000 +0100
-+++ new/c-code/sub_dsp.c	2015-02-28 23:09:40.439796459 +0100
+diff -ur workdir_vanilla/c-code/sub_cd.c workdir_patched/c-code/sub_cd.c
+--- workdir_vanilla/c-code/sub_cd.c	1995-06-06 11:34:28.000000000 +0200
++++ workdir_patched/c-code/sub_cd.c	2026-01-04 14:45:32.732719214 +0100
+@@ -3,6 +3,10 @@
+ *
+ *	DESCRIPTION		:	Sub-routines for speech channel decoding
+ *
++*       NOTE: Read_Tetra_File() has been changed from the original ETSI code and 
++*             might not be 100% compatible, Please see the comments for this
++*             function --sq5bpf
++*
+ ************************************************************************
+ *
+ *	SUBROUTINES		:	- Bfi()
+@@ -435,7 +439,7 @@
+ Word16          Lsb;
+ Word16          Chosen_score, Chosen_lsb;
+ Word16          Maximum; /* Best score of the current Step */
+-Word16          Best;
++Word16          Best=0;
+ Word16          Arrival_state,  Arrival_state_sym;
+ Word32          L_temp;     
+ Word16          Size_Class0, Size_Class1, Size_Class2;
+@@ -874,6 +878,10 @@
+ *	DESCRIPTION			:	Read a file in the TETRA hardware test
+ *							frame format
+ *
++*       NOTE: this has been changed from the original to also read the keystream
++*             in the unused fifth frame. this is sent by osmo-tetra-sq5bpf-2
++*             Jacek Lipkowski <sq5bpf@lipkowski.org>
++*
+ **************************************************************************
+ *
+ *	USAGE				:	Read_Tetra_File(file_pointer,buffer)
+@@ -895,7 +903,7 @@
+ *
+ **************************************************************************/
+ 
+-short           Read_Tetra_File (FILE *fin, short *array)
++short           Read_Tetra_File (FILE *fin, short *array, short *keystream_array)
+ {
+ 	static short    initial = 0;
+ 	static short    block[690];
+@@ -957,6 +965,20 @@
+ 		for (i = 0; i < 90; i++)
+ 			*array++ = *ptr_block++;
+ 
++/* Keystream array is hacked into the unused fifth block in the lower nibble --sq5bpf */
++		ptr_block = block + 641 - 45 - 45 - 45 - 45;
++		Word16 l=0;
++		Word16 a=*ptr_block;
++		for (i = 0; i < (137*2); i++)
++		{
++			if ((l==4)&&(i)) { l=0; ptr_block++; a=*ptr_block; }
++			*keystream_array=(a&0x08)?1:0;
++			a=a<<1;
++			keystream_array++;
++			l++;
++		}
++
++
+ 		array = start_of_array;
+ 		for (i=0; i<432; i++)
+ 		{   
+diff -ur workdir_vanilla/c-code/sub_dsp.c workdir_patched/c-code/sub_dsp.c
+--- workdir_vanilla/c-code/sub_dsp.c	1996-03-19 11:25:12.000000000 +0100
++++ workdir_patched/c-code/sub_dsp.c	2026-01-02 10:01:55.022617466 +0100
 @@ -554,7 +554,7 @@
  
    fac[0] = gamma;
@@ -376,9 +517,9 @@ diff -ur orig/c-code/sub_dsp.c new/c-code/sub_dsp.c
  
    return;
  }
-diff -ur orig/c-code/sub_sc_d.c new/c-code/sub_sc_d.c
---- orig/c-code/sub_sc_d.c	1996-04-25 08:46:54.000000000 +0200
-+++ new/c-code/sub_sc_d.c	2015-02-28 23:09:40.439796459 +0100
+diff -ur workdir_vanilla/c-code/sub_sc_d.c workdir_patched/c-code/sub_sc_d.c
+--- workdir_vanilla/c-code/sub_sc_d.c	1996-04-25 08:46:54.000000000 +0200
++++ workdir_patched/c-code/sub_sc_d.c	2026-01-02 10:01:55.022617466 +0100
 @@ -1829,7 +1829,7 @@
      s = L_mac0(s, x[i-15], coef[i]);
  
@@ -397,9 +538,9 @@ diff -ur orig/c-code/sub_sc_d.c new/c-code/sub_sc_d.c
    return(i);
  }
  
-diff -ur orig/c-code/tetra_op.c new/c-code/tetra_op.c
---- orig/c-code/tetra_op.c	1995-06-06 11:22:52.000000000 +0200
-+++ new/c-code/tetra_op.c	2015-02-28 23:09:40.439796459 +0100
+diff -ur workdir_vanilla/c-code/tetra_op.c workdir_patched/c-code/tetra_op.c
+--- workdir_vanilla/c-code/tetra_op.c	1995-06-06 11:22:52.000000000 +0200
++++ workdir_patched/c-code/tetra_op.c	2026-01-02 10:01:55.022617466 +0100
 @@ -31,7 +31,7 @@
  *					- negate()
  *					- norm_l()
